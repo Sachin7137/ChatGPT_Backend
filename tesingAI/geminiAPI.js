@@ -15,7 +15,7 @@ async function chatApp(question) {
       {
         type: "user_input",
         content: [{ type: "text", text: question }],
-      },
+      },  
     ],
   });
   console.log("Response:", interaction1.steps.at(-1).content[0].text);

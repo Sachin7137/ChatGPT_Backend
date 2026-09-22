@@ -1,6 +1,15 @@
 import mongoose from "mongoose";
 import Chat from "../model/chatSchema.js";
 import Message from "../model/messageSchema.js";
+import {
+  addUserTokenUsage,
+  hasTokenLimitReached,
+  resetUsageIfNeeded,
+} from "../utils/userUsage.js";
+import { buildMessageForAI } from "../utils/chatContext.js";
+import { generateAIResponse } from "../service/openRouterService.js";
+import { addChatTokenUsage } from "../utils/tokenUsage.js";
+import { updateSummaryIfNNeeded } from "../service/summaryService.js";
 
 export const getMessage = async (req, res) => {
   try {
@@ -41,6 +50,15 @@ export const sendMessage = async (req, res) => {
       });
     }
 
+    await resetUsageIfNeeded(req.user);
+
+    if (hasTokenLimitReached(req.user)) {
+      return res.status(429).json({
+        message: "Token limit reached. Please try after some time.",
+        usage: req.user.usage,
+      });
+    }
+
     let chat;
 
     if (chatId) {
@@ -74,20 +92,69 @@ export const sendMessage = async (req, res) => {
       });
     }
 
-    const userMessage = await Message.create({
-      userId: req.user._id,
+    // Without AI Integration
+    // const userMessage = await Message.create({
+    //   userId: req.user._id,
+    //   chatId: chat._id,
+    //   role: "user",
+    //   content: content,
+    // });
+
+    // const dummyAIReply = "Hello, I'm doing great";
+
+    // const assistantMessage = await Message.create({
+    //   userId: req.user._id,
+    //   chatId: chat._id,
+    //   role: "assistant",
+    //   content: dummyAIReply,
+    // });
+
+    // chat.messageCount += 2;
+
+    // if (chat.topic === "New Chat") {
+    //   chat.topic = content.trim().slice(0, 40);
+    // }
+
+    // await chat.save();
+
+    // res.status(201).json({
+    //   message: "Message sent successfully",
+    //   chatId: chat._id,
+    //   userMessage,
+    //   assistantMessage,
+    // });
+
+    // With AI Integration
+    const oldMessages = await Message.find({
       chatId: chat._id,
-      role: "user",
-      content: content,
+    })
+      .sort({ createdAt: 1 })
+      .skip(chat.summarizedTillMessageNumber);
+
+    const messagesForAI = buildMessageForAI({
+      chat,
+      oldMessages,
+      currentMessage: content.trim(),
     });
 
-    const dummyAIReply = "Hello, I'm doing great";
+    const { aiReply, usage } = await generateAIResponse({
+      model: chat.model,
+      messages: messagesForAI,
+    });
+
+    const userMessage = await Message.create({
+      chatId: chat._id,
+      role: "user",
+      content: content.trim(),
+      userId: req.user._id,
+    });
 
     const assistantMessage = await Message.create({
-      userId: req.user._id,
       chatId: chat._id,
       role: "assistant",
-      content: dummyAIReply,
+      content: aiReply,
+      userId: req.user._id,
+      usage,
     });
 
     chat.messageCount += 2;
@@ -96,14 +163,19 @@ export const sendMessage = async (req, res) => {
       chat.topic = content.trim().slice(0, 40);
     }
 
-    await chat.save();
+    await addChatTokenUsage(chat, usage);
+    await addUserTokenUsage(req.user, usage.totalTokens);
 
     res.status(201).json({
       message: "Message sent successfully",
       chatId: chat._id,
+      reply: aiReply,
+      usage,
       userMessage,
       assistantMessage,
     });
+
+    updateSummaryIfNNeeded(chat._id);
   } catch (err) {
     console.log(err);
     res.status(500).json({
