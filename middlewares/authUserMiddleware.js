@@ -6,7 +6,7 @@ const authUserMiddleware = async (req, res, next) => {
     const { token } = req.cookies;
 
     if(!token){
-        res.status(200).json({
+        return res.status(401).json({
             message: "You have to loggin first!"
         })
     }

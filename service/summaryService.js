@@ -68,7 +68,7 @@ export const updateSummaryIfNNeeded = async (chatId) => {
     const user = await User.findById(chat.userId);
 
     if(user){
-        user.usage.tokenUsed + usage.totalTokens;
+        user.usage.tokenUsed += usage.totalTokens;
         user.usage.totalTokenUsed += usage.totalTokens;
 
         await user.save();

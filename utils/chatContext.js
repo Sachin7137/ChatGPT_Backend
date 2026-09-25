@@ -8,7 +8,7 @@ Dont use abusive language, if user ask question related to something which
 can harm other, dont answer it.
 `;
 
-export const buildMessageForAI = ({ chat, oldMessage, currentMessage }) => {
+export const buildMessageForAI = ({ chat, oldMessages, currentMessage }) => {
   const messages = [
     {
       role: "system",
@@ -23,14 +23,14 @@ export const buildMessageForAI = ({ chat, oldMessage, currentMessage }) => {
     });
   }
 
-  for (const msg of oldMessage) {
+  for (const msg of oldMessages) {
     messages.push({
       role: msg.role,
       content: msg.content,
     });
   }
 
-  messages.psuh({
+  messages.push({
     role: "user",
     content: currentMessage,
   });

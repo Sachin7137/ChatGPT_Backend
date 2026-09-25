@@ -1,8 +1,8 @@
-import dotenv from "dotenv/config"
+import dotenv from "dotenv/config";
 import express from "express";
 import connectDB from "./config/database.js";
 import cookieParser from "cookie-parser";
-import userRouter from "./routes/userRouter.js"
+import userRouter from "./routes/userRouter.js";
 import chatRouter from "./routes/chatRouter.js";
 import messageRouter from "./routes/messageRouter.js";
 
@@ -15,7 +15,6 @@ app.use(cookieParser());
 app.use("/user", userRouter);
 app.use("/chat", chatRouter);
 app.use("/message", messageRouter);
-
 
 const startServer = async () => {
   try {

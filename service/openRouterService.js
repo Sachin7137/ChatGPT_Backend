@@ -8,9 +8,9 @@ export const generateAIResponse = async ({ model, messages }) => {
     },
   });
 
-  const aiReplay = completion.choices[0]?.message?.content;
+  const aiReply = completion.choices[0]?.message?.content;
 
-  if (!aiReplay) {
+  if (!aiReply) {
     throw new Error("AI response is empty!");
   }
 
@@ -18,7 +18,7 @@ export const generateAIResponse = async ({ model, messages }) => {
   const completionTokens = completion.usage?.completionTokens || 0;
 
   return {
-    aiReplay,
+    aiReply,
     usage: {
       promptTokens,
       completionTokens,
