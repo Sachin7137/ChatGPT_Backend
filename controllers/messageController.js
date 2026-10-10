@@ -1,11 +1,7 @@
 import mongoose from "mongoose";
 import Chat from "../model/chatSchema.js";
 import Message from "../model/messageSchema.js";
-import {
-  addUserTokenUsage,
-  hasTokenLimitReached,
-  resetUsageIfNeeded,
-} from "../utils/userUsage.js";
+import { redisClient } from "../config/redis.js";
 import { buildMessageForAI } from "../utils/chatContext.js";
 import { generateAIResponse } from "../service/openRouterService.js";
 import { addChatTokenUsage } from "../utils/tokenUsage.js";
@@ -50,13 +46,18 @@ export const sendMessage = async (req, res) => {
       });
     }
 
-    await resetUsageIfNeeded(req.user);
+    await addChatTokenUsage(chat, usage);
 
-    if (hasTokenLimitReached(req.user)) {
-      return res.status(429).json({
-        message: "Token limit reached. Please try after some time.",
-        usage: req.user.usage,
-      });
+    const tokenUsed = await redisClient.incrBy(
+      req.tokenUsageKey,
+      usage.totalTokens,
+    );
+
+    if (tokenUsed === usage.totalTokens) {
+      await redisClient.expire(
+        req.tokenUsageKey,
+        Number(process.env.TOKEN_WINDOW_SECONDS),
+      );
     }
 
     let chat;
@@ -125,6 +126,7 @@ export const sendMessage = async (req, res) => {
     // });
 
     // With AI Integration
+    
     const oldMessages = await Message.find({
       chatId: chat._id,
     })
@@ -166,16 +168,22 @@ export const sendMessage = async (req, res) => {
     await addChatTokenUsage(chat, usage);
     await addUserTokenUsage(req.user, usage.totalTokens);
 
-    res.status(201).json({
-      message: "Message sent successfully",
-      chatId: chat._id,
-      reply: aiReply,
-      usage,
-      userMessage,
-      assistantMessage,
+    
+    updateSummaryIfNNeeded(chat._id).catch((err) => {
+      console.log("Error in updating summary:", err);
     });
 
-    updateSummaryIfNNeeded(chat._id);
+    return res.status(201).json({
+    message: "Message sent successfully",
+    chatId: chat._id,
+    reply: aiReply,
+    usage,
+    tokenUsed,
+    tokenLimit: Number(process.env.TOKEN_LIMIT),
+    userMessage,
+    assistantMessage
+});
+
   } catch (err) {
     console.log(err);
     res.status(500).json({

@@ -2,7 +2,13 @@ import { redisClient } from "../config/redis.js";
 
 const authenticatedRateLimiter = async (req, res, next) => {
     try {
-        const userId = req.user._id.toString();
+        const userId = req.userId;
+
+        if (!userId) {
+            return res.status(401).json({
+                message: "User is not authenticated"
+            });
+        }
 
         const key = `rate-limit:user:${userId}`;
 
@@ -20,10 +26,12 @@ const authenticatedRateLimiter = async (req, res, next) => {
             });
         }
 
-        next();
+        return next();
     } catch (error) {
         console.log("Authenticated rate limiter error:", error);
-        next();
+
+        // Fail open: continue if Redis is unavailable
+        return next();
     }
 };
 
