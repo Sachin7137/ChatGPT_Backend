@@ -5,7 +5,7 @@ import { redisClient } from "../config/redis.js";
 import { buildMessageForAI } from "../utils/chatContext.js";
 import { generateAIResponse } from "../service/openRouterService.js";
 import { addChatTokenUsage } from "../utils/tokenUsage.js";
-import { updateSummaryIfNNeeded } from "../service/summaryService.js";
+import { updateSummaryIfNeeded } from "../service/summaryService.js";
 
 export const getMessage = async (req, res) => {
   try {
@@ -46,19 +46,7 @@ export const sendMessage = async (req, res) => {
       });
     }
 
-    await addChatTokenUsage(chat, usage);
-
-    const tokenUsed = await redisClient.incrBy(
-      req.tokenUsageKey,
-      usage.totalTokens,
-    );
-
-    if (tokenUsed === usage.totalTokens) {
-      await redisClient.expire(
-        req.tokenUsageKey,
-        Number(process.env.TOKEN_WINDOW_SECONDS),
-      );
-    }
+    
 
     let chat;
 
@@ -168,8 +156,19 @@ export const sendMessage = async (req, res) => {
     await addChatTokenUsage(chat, usage);
     await addUserTokenUsage(req.user, usage.totalTokens);
 
+    const tokenUsed = await redisClient.incrBy(
+      req.tokenUsageKey,
+      usage.totalTokens,
+    );
+
+    if (tokenUsed === usage.totalTokens) {
+      await redisClient.expire(
+        req.tokenUsageKey,
+        Number(process.env.TOKEN_WINDOW_SECONDS),
+      );
+    }
     
-    updateSummaryIfNNeeded(chat._id).catch((err) => {
+    updateSummaryIfNeeded(chat._id).catch((err) => {
       console.log("Error in updating summary:", err);
     });
 

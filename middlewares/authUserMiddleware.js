@@ -27,15 +27,15 @@ const authUserMiddleware = async (req, res, next) => {
             process.env.JWT_SECRET
         );
 
-        const existingUser = await User.findById(payload.id);
+        // const existingUser = await User.findById(payload.id);
 
-        if (!existingUser) {
-            return res.status(401).json({
-                message: "User doesn't exist"
-            });
-        }
+        // if (!existingUser) {
+        //     return res.status(401).json({
+        //         message: "User doesn't exist"
+        //     });
+        // }
 
-        req.user = existingUser;
+        req.userId = payload.id;
         req.token = token;
         req.tokenPayload = payload;
 

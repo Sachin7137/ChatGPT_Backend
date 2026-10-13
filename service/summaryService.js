@@ -5,7 +5,7 @@ import { generateAIResponse } from "./openRouterService.js";
 
 const SUMMARY_CHUNK_SIZE = 20;
 
-export const updateSummaryIfNNeeded = async (chatId) => {
+export const updateSummaryIfNeeded = async (chatId) => {
   const chat = await Chat.findById(chatId);
 
   if (!chat) return;
@@ -74,4 +74,3 @@ export const updateSummaryIfNNeeded = async (chatId) => {
         await user.save();
     }
 };
-
