@@ -45,17 +45,17 @@ Important folders and files:
 config/
   database.js              # MongoDB connection
   redis.js                 # Redis client connection
-  openRouter.js             # OpenRouter client configuration
+  openRouter.js            # OpenRouter client configuration
 controllers/
-  userController.js         # Signup, login, logout, profile, account deletion
-  chatController.js         # Create, list, read, and delete chats
-  messageController.js      # Load messages and generate/save AI responses
+  userController.js        # Signup, login, logout, profile, account deletion
+  chatController.js        # Create, list, read, and delete chats
+  messageController.js     # Load messages and generate/save AI responses
 middlewares/
-  authUserMiddleware.js     # JWT/cookie authentication
-  loadUserMiddleware.js     # Load the authenticated user's database record
+  authUserMiddleware.js    # JWT/cookie authentication
+  loadUserMiddleware.js    # Load the authenticated user's database record
   authenticatedRateLimiter.js
   unathenticatedRateLimiter.js
-  tokenUsageMiddleware.js   # Redis token-window limit check
+  tokenUsageMiddleware.js  # Redis token-window limit check
 model/
   userSchema.js
   chatSchema.js
@@ -65,8 +65,8 @@ routes/
   chatRouter.js
   messageRouter.js
 service/
-  openRouterService.js      # OpenRouter request and usage extraction
-  summaryService.js         # Conversation summary maintenance
+  openRouterService.js     # OpenRouter request and usage extraction
+  summaryService.js        # Conversation summary maintenance
 utils/
   chatContext.js            # Build model input from chat history
   tokenUsage.js             # Update per-chat token totals
