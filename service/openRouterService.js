@@ -17,6 +17,8 @@ export const generateAIResponse = async ({ model, messages }) => {
   const promptTokens = completion.usage?.promptTokens || 0;
   const completionTokens = completion.usage?.completionTokens || 0;
 
+  console.log("OpenRouter usage:", completion.usage);
+
   return {
     aiReply,
     usage: {

@@ -5,6 +5,9 @@ import { redisClient } from "../config/redis.js";
 import { buildMessageForAI } from "../utils/chatContext.js";
 import { generateAIResponse } from "../service/openRouterService.js";
 import { addChatTokenUsage } from "../utils/tokenUsage.js";
+
+import { addUserTokenUsage } from "../utils/userUsage.js";
+
 import { updateSummaryIfNeeded } from "../service/summaryService.js";
 
 export const getMessage = async (req, res) => {
